@@ -41,7 +41,9 @@ version: '3.3'
 services:
   our-new-api:
     environment:
-      APP_KEY: ezrider:string/16
+      APP_KEY: random:string(64)
+      APP_ENV: random:array(local, sand, prod)
+      APP_PORT: random:int(1,1000)
       OTHER_SECRET: vault:secret/data/path/to/vault#value
 ```
 
@@ -51,9 +53,34 @@ services:
 ./ez-rider
 ```
 
-4. You should see two files generated, the default config file `ezrider.json` and your `docker-compose.overrides.yml` file. 
+
+4. You should see two files generated, the default config file `ezrider.json` and your `docker-compose.overrides.yml` file.
 
 
+5. The config file should be committed as part of source control with your repo, and contains the following options:
+
+```json
+{
+    "plugin_paths": [],
+    "plugins": [
+        "VaultRetriever", "RandomGenerator"
+    ],
+    "map": [
+        {
+            "input": "docker-compose.yml",
+            "output": "docker-compose.override.yml"
+        }
+    ]
+}
+```
+
+- `plugin_paths`: array of folders to check for plugin files (empty by default, merged with internal plugins path)
+
+
+- `plugins`: array of class names that correspond to the plugin you want to load from `plugin_paths`. These plugins will be applied to generate your override. If your docker-compose does not use any annotations from a particular plugin, feel free to remove that plugin here
+
+
+- `map`: array of map objects that tell which docker-compose files to map, and their output filename
 ## License
 
 EzRider is an open-source software licensed under the MIT license.
