@@ -80,7 +80,20 @@ services:
 - `plugins`: array of class names that correspond to the plugin you want to load from `plugin_paths`. These plugins will be applied to generate your override. If your docker-compose does not use any annotations from a particular plugin, feel free to remove that plugin here
 
 
-- `map`: array of map objects that tell which docker-compose files to map, and their output filename
+- `map`: array of map objects that tell which docker-compose files to map, and their output filename\
+
+## Vault Plugin
+The HashiCorp Vault Plugin connects to Vault servers via an API.   It requires a Vault Base Url and Token to operate.  
+
+The plugin will prompt you for this info and is cached for subsequent calls. Unless you have either of the following environment vars set, in which case the prompt is skipped and this value used. For example: 
+
+```bash
+export VAULT_URL=http://our-vault-server.vault.com
+export VAULT_TOKEN=abc1234
+```
+
+
+
 ## License
 
 EzRider is an open-source software licensed under the MIT license.
