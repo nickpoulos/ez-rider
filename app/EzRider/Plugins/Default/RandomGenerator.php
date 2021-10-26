@@ -7,7 +7,7 @@ use App\EzRider\Plugins\Plugin;
 
 class RandomGenerator extends Plugin
 {
-    public const RANDOM_ANNOTATION_REGEX = '/(?<=random\:)(string|integer/.+)(#.+)/';
+    public const RANDOM_ANNOTATION_REGEX = '/(?<=random\:)[A-Za-z]+\(?.*,?.*\)?/';
     public const RANDOM_ANNOTATION_PREFIX = 'random:';
 
     protected function filter(mixed $environmentVarValue) : bool
@@ -15,7 +15,6 @@ class RandomGenerator extends Plugin
         if (!is_string($environmentVarValue)) {
             return false;
         }
-
         return preg_match(self::RANDOM_ANNOTATION_REGEX, $environmentVarValue);
     }
 
