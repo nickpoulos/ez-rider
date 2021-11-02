@@ -8,7 +8,7 @@
 </p>
 
 <p>EzRider is a php-cli command (packaged as a PHAR) that provides an easy way to generate Docker Compose Override files for your applications.</p>
-Many times your application may require secrets or other sensitive information, perhaps even randomly generated data. By including certain annotations in your Docker Compose files + an ezrider.json config file, Ez Rider will fetch/generate this data, and write the proper override file automatically.  
+Many times your application may require secrets or other sensitive information, perhaps even randomly generated data. By including certain annotations in your Docker Compose files, and committing an `ezrider.json` config file, Ez-Rider will fetch/generate this data, and write the proper override file automatically.  
 
 <p>You can think of this as akin to Vault annotations in K8s, which was an inspiration for this package and its annotation syntax.</p>
 
@@ -80,7 +80,7 @@ services:
 - `plugins`: array of class names that correspond to the plugin you want to load from `plugin_paths`. These plugins will be applied to generate your override. If your docker-compose does not use any annotations from a particular plugin, feel free to remove that plugin here
 
 
-- `map`: array of map objects that tell which docker-compose files to map, and their output filename\
+- `map`: array of map objects that sets which docker-compose files to map, and their output filename.
 
 ## Vault Plugin
 The HashiCorp Vault Plugin connects to Vault servers via an API.   It requires a Vault Base Url and Token to operate.  
@@ -92,7 +92,10 @@ export VAULT_URL=http://our-vault-server.vault.com
 export VAULT_TOKEN=abc1234
 ```
 
+See the annotation syntax in Step 2 above.
 
+## Random Generator
+The random generator provides a few ways to generate some random data in your Docker Compose file.  There are methods for random string, random integer, and random element from array.  See the annotation syntax in Step 2 above.
 
 ## License
 
