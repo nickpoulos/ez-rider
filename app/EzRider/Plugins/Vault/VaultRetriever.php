@@ -4,8 +4,6 @@ namespace App\EzRider\Plugins\Vault;
 
 use Illuminate\Support\Str;
 use App\EzRider\Plugins\Plugin;
-use Wilderborn\Partyline\Facade as Partyline;
-use App\EzRider\Plugins\PluginInterface;
 
 class VaultRetriever extends Plugin
 {
