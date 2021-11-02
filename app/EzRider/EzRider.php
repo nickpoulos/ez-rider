@@ -3,10 +3,7 @@
 namespace App\EzRider;
 
 use Exception;
-use App\EzRider\Plugins\Plugin;
 use Illuminate\Support\Facades\File;
-use App\EzRider\Plugins\PluginLoader;
-use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 class EzRider
@@ -14,19 +11,23 @@ class EzRider
     protected const DEFAULT_CONFIG_FILENAME = 'ezrider.json';
 
     public function __construct(
-        protected DockerComposeParser $dockerComposeParser,
-        protected PluginLoader $pluginLoader,
-        protected PluginToEnvironmentVariableMapper $pluginToEnvironmentVariableMapper,
+        protected DockerComposeOverrideGenerator $dockerComposeOverrideGenerator,
         protected ?array $config = null
     ) {}
 
     /**
+     * Load our config file into memory
+     *
+     * @return string
      * @throws Exception
      */
-    public function loadConfig(string $configFilePath) : void
+    public function loadConfig(?string $configFilePath) : string
     {
         if (!$configFilePath && !file_exists($this->defaultConfigFilePath())) {
             $this->generateInitialConfig();
+        }
+
+        if (!$configFilePath) {
             $configFilePath = $this->defaultConfigFilePath();
         }
 
@@ -35,47 +36,23 @@ class EzRider
         }
 
         $this->config = json_decode(file_get_contents($configFilePath), true, 512, JSON_THROW_ON_ERROR);
-    }
 
-    public function generateOverrideFiles()  : void
-    {
-        collect($this->getMappings())->each(function (array $map) {
-
-            ["input" => $inputFilePath, "output" => $outputFilepath] = $map;
-
-            try {
-                $dockerComposeConfig = $this->dockerComposeParser->loadDockerComposeFile($inputFilePath);
-            } catch (FileNotFoundException $e) {
-                Partyline::error($e->getMessage() . ' (' . $inputFilePath . ') : Skipping');
-                return true; // === continue;
-            }
-
-            $servicesWithEnvironmentVariables = $this->dockerComposeParser->getEnvironmentVariablesByService($dockerComposeConfig);
-
-            if (!$servicesWithEnvironmentVariables) {
-                Partyline::error('No Valid Services/Environment Vars In Docker Compose File (' . $inputFilePath . '): Skipping!');
-                return true; // === continue;
-            }
-
-            $environmentVariablesByService = $servicesWithEnvironmentVariables->map(\Closure::fromCallable([$this->dockerComposeParser, 'mapEnvironmentVariablesFromServiceData']));
-
-            $mappedEnvironmentVariablesByService = collect($this->getPlugins())->map(function(string $pluginClass) use ($environmentVariablesByService) {
-
-                /** @var Plugin $plugin */
-                $plugin = app()->make($this->pluginLoader->load($pluginClass));
-                return $plugin->mapServicesEnvironmentVariables($environmentVariablesByService);
-
-            })->toArray();
-
-            $dockerComposeOverrideConfig = [
-                'services' => $mappedEnvironmentVariablesByService
-            ];
-
-            yaml_emit_file($outputFilepath, $dockerComposeOverrideConfig);
-        });
+        return $configFilePath;
     }
 
     /**
+     * Generate override files for all the mappings in our config file
+     */
+    public function generateOverrideFiles()  : void
+    {
+        collect($this->getMappings())->each(
+            fn(array $inputOutputMapping) => $this->dockerComposeOverrideGenerator->generateOverrideFile($inputOutputMapping, $this->getPlugins())
+        );
+    }
+
+    /**
+     * Create config file with the default options
+     *
      * @throws \JsonException
      */
     protected function generateInitialConfig() : void
@@ -97,16 +74,31 @@ class EzRider
         );
     }
 
+    /**
+     * Fetch mapping options from config
+     *
+     * @return array|null
+     */
     protected function getMappings() : ?array
     {
         return $this->config['map'];
     }
 
+    /**
+     * Fetch plugin options from config
+     *
+     * @return array|null
+     */
     protected function getPlugins() : ?array
     {
         return $this->config['plugins'];
     }
 
+    /**
+     * Generate default config filename
+     *
+     * @return string
+     */
     protected function defaultConfigFilePath() : string
     {
         return getcwd() . '/' . self::DEFAULT_CONFIG_FILENAME;
