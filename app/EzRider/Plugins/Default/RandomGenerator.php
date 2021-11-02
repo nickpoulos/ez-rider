@@ -7,9 +7,21 @@ use App\EzRider\Plugins\Plugin;
 
 class RandomGenerator extends Plugin
 {
+    /**
+     * Regex used to determine if an environment var
+     * contains a 'random' annotation
+     */
     public const RANDOM_ANNOTATION_REGEX = '/(?<=random\:)[A-Za-z]+\(?.*,?.*\)?/';
+
+    /**
+     *
+     */
     public const RANDOM_ANNOTATION_PREFIX = 'random:';
 
+    /**
+     * @param mixed $environmentVarValue
+     * @return bool
+     */
     protected function filter(mixed $environmentVarValue) : bool
     {
         if (!is_string($environmentVarValue)) {
@@ -18,6 +30,11 @@ class RandomGenerator extends Plugin
         return preg_match(self::RANDOM_ANNOTATION_REGEX, $environmentVarValue);
     }
 
+    /**
+     * @param mixed $environmentVarValue
+     * @return mixed
+     * @throws \Exception
+     */
     protected function map(mixed $environmentVarValue) : mixed
     {
         $input = Str::after($environmentVarValue, self::RANDOM_ANNOTATION_PREFIX);
@@ -32,7 +49,10 @@ class RandomGenerator extends Plugin
         };
     }
 
+
     /**
+     * @param string|int $length
+     * @return string
      * @throws \Exception
      */
     protected function randomString(string|int $length = 1) : string
@@ -48,9 +68,13 @@ class RandomGenerator extends Plugin
         return $secret;
     }
 
+    /**
+     * @param array $possibleValues
+     * @return mixed
+     */
     protected function randomArray(array $possibleValues) : mixed
     {
-        return array_rand($possibleValues, 1);
+        return $possibleValues[array_rand($possibleValues, 1)];
     }
 
     /**
