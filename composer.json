@@ -3,7 +3,7 @@
     "description": "Ez-Rider: Easily generate Docker Compose Override files with secrets",
     "keywords": ["ez-rider", "docker", "docker-compose", "override", "config", "console", "cli"],
     "homepage": "https://nickpoulos.info",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "support": {
         "issues": "https://github.com/nickpoulos/ez-rider/issues",
