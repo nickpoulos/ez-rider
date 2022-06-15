@@ -29,7 +29,7 @@ Many times your application may require secrets or other sensitive information, 
 1. Install this package globally via Composer, NOT from within your project source
 
 ```bash
-compose global require nickpoulos/ezrider
+composer global require nickpoulos/ez-rider
 ```
 
 2. In your project's Docker Compose file, create a service containing an environment variable using the syntax below:
