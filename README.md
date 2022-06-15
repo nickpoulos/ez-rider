@@ -8,9 +8,9 @@
 </p>
 
 <p>EzRider is a php-cli command (packaged as a PHAR) that provides an easy way to generate Docker Compose Override files for your applications.</p>
-Many times your application may require secrets or other sensitive information, perhaps even randomly generated data. By including certain annotations in your Docker Compose files, and committing an `ezrider.json` config file, Ez-Rider will fetch/generate this data, and write the proper override file automatically.  
+Many times your application may require secrets or other sensitive information, perhaps even randomly generated data. By including certain annotations in your Docker Compose files, Ez-Rider will fetch/generate this data, and write the proper override file automatically.  
 
-<p>You can think of this as akin to Vault annotations in K8s, which was an inspiration for this package and its annotation syntax.</p>
+<p>You can think of this as akin to Vault annotations in K8s/Helm, which was an inspiration for this package and its annotation syntax.</p>
 
 <small>Created and maintained by [Nick Poulos](https://nickpoulos.info)</small>
 
@@ -41,10 +41,13 @@ version: '3.3'
 services:
   our-new-api:
     environment:
-      APP_KEY: random:string(64)
-      APP_ENV: random:array(local, sand, prod)
-      APP_PORT: random:int(1,1000)
-      OTHER_SECRET: vault:secret/data/path/to/vault#value
+      APP_KEY: laravel:app-key
+      RANDOM_ARRAY_ELEMENT: random:array(local, sand, prod)
+      RANDOM_INT_BETWEEN: random:int(1,1000)
+      RANDOM_STRING_OF_LENGTH: random:string(64)
+      RSA_KEY_PAIR_PUBLIC: rsa:public(4096, passport)   # takes key length and "key-pair name" as arguments
+      RSA_KEY_PAUR_PRIVATE: rsa:private(4096, passport) # takes key length and "key-pair name" as arguments      
+      VAULT_SECRET: vault:secret/data/path/to/vault#value # these poths are identical to K8s/Nomad keys
 ```
 
 3. In your project's root folder (or wherever docker-compose.yml is located), run: 
@@ -53,18 +56,17 @@ services:
 ./ez-rider
 ```
 
+This command will also take an optional config file argument. This is useful when multiple mappings or customized docker-compose.yml filenames are required.
 
-4. You should see two files generated, the default config file `ezrider.json` and your `docker-compose.overrides.yml` file.
+The default config below will be used when no config file argument is given. 
+
+4. The command will map the appropriate variables and generate your `docker-compose.overrides.yml` file.
 
 
-5. The config file should be committed as part of source control with your repo, and contains the following options:
+5. The config file can be committed as part of source control with your repo, and contains a simple array of input/output mappings:
 
 ```json
 {
-    "plugin_paths": [],
-    "plugins": [
-        "VaultRetriever", "RandomGenerator"
-    ],
     "map": [
         {
             "input": "docker-compose.yml",
@@ -74,18 +76,16 @@ services:
 }
 ```
 
-- `plugin_paths`: array of folders to check for plugin files (empty by default, merged with internal plugins path)
-
-
-- `plugins`: array of class names that correspond to the plugin you want to load from `plugin_paths`. These plugins will be applied to generate your override. If your docker-compose does not use any annotations from a particular plugin, feel free to remove that plugin here
-
-
 - `map`: array of map objects that sets which docker-compose files to map, and their output filename.
 
 ## Vault Plugin
-The HashiCorp Vault Plugin connects to Vault servers via an API.   It requires a Vault Base Url and Token to operate.  
+The HashiCorp Vault Plugin connects to Vault servers via API.   It requires a Vault Base Url and Token to operate.  
 
-The plugin will prompt you for this info and is cached for subsequent calls. Unless you have either of the following environment vars set, in which case the prompt is skipped and this value used. For example: 
+The plugin will prompt you for this info and is cached for subsequent calls. 
+
+If you have either of the following environment vars set, the prompt is skipped and these values used. 
+
+For example: 
 
 ```bash
 export VAULT_URL=http://our-vault-server.vault.com
@@ -95,7 +95,17 @@ export VAULT_TOKEN=abc1234
 See the annotation syntax in Step 2 above.
 
 ## Random Generator
-The random generator provides a few ways to generate some random data in your Docker Compose file.  There are methods for random string, random integer, and random element from array.  See the annotation syntax in Step 2 above.
+The random generator provides a few ways to generate some random data in your Docker Compose file.  There are methods for random string, random integer, and random element from array.  
+
+# Laravel App Key Generator
+This plugin will generate a Base64 encoded Laravel Application Key.
+
+# RSA Key/Pair Generator
+This plugin generates an RSA key/pair, and is suitable for things like Laravel Passport keys and other use cases. 
+
+You can choose to use the public or private key, as well as provide arguments for key length and a "label" for the key/value pair.  If you only have one key value pair in your env, the label argument is not needed.  Key length is also optional and will default to 4096.  
+
+See the annotation syntax in Step 2 above.
 
 ## License
 
