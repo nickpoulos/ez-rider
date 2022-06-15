@@ -2,6 +2,7 @@
 
 namespace App\EzRider;
 
+
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
@@ -23,13 +24,12 @@ class DockerComposeParser
 
     /**
      * @param array $dockerConfig
+     * @todo use new PHP 8.1 syntax soon for first class callables
      * @return Collection|null
      */
     public function getEnvironmentVariablesByService(array $dockerConfig) : ?Collection
     {
-        $services = $this->getServices($dockerConfig);
-
-        return $services?->filter(\Closure::fromCallable([$this, "filterServicesWithEnvironments"]));
+        return $this->getServices($dockerConfig)?->filter(\Closure::fromCallable([$this, "filterServicesWithEnvironments"]));
     }
 
     public function mapEnvironmentVariablesFromServiceData(array $serviceData, string $serviceName) : Collection
