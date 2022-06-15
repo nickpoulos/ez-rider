@@ -4,6 +4,7 @@ namespace App\EzRider\Plugins\Vault;
 
 use Illuminate\Support\Str;
 use App\EzRider\Plugins\Plugin;
+use Wilderborn\Partyline\Facade as Partyline;
 
 class VaultRetriever extends Plugin
 {
@@ -22,7 +23,7 @@ class VaultRetriever extends Plugin
         return preg_match(self::VAULT_ANNOTATION_REGEX, $environmentVarValue);
     }
 
-    public function map(mixed $environmentVarValue) : mixed
+    public function map(mixed $environmentVarValue) : string
     {
         return $this->getSecretFromVault(
             $this->parseSecretPath($environmentVarValue)
@@ -37,6 +38,12 @@ class VaultRetriever extends Plugin
     protected function getSecretFromVault(array $secretPathAndKey) : string
     {
         $vaultData = $this->vaultService->fetchSecret('/' . $secretPathAndKey[0]);
+
+        if (array_key_exists('errors', $vaultData)) {
+            Partyline::error('Vault ' . Str::plural('Error', count($vaultData['errors'])) . ': ' . implode(PHP_EOL, $vaultData['errors']));
+            exit(1);
+        }
+
         return $vaultData['data']['data'][$secretPathAndKey[1]];
     }
 }
