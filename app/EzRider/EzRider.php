@@ -23,21 +23,17 @@ class EzRider
      */
     public function loadConfig(?string $configFilePath) : string
     {
-        if (!$configFilePath && !file_exists($this->defaultConfigFilePath())) {
-            $this->generateInitialConfig();
-        }
-
         if (!$configFilePath) {
             $configFilePath = $this->defaultConfigFilePath();
         }
 
-        if (!file_exists($configFilePath)) {
-            throw new FileNotFoundException('Config file cannot be located (' . $configFilePath . ')');
+        if (file_exists($configFilePath)) {
+            $this->config = json_decode(file_get_contents($configFilePath), true, 512, JSON_THROW_ON_ERROR);
+            return $configFilePath;
         }
 
-        $this->config = json_decode(file_get_contents($configFilePath), true, 512, JSON_THROW_ON_ERROR);
-
-        return $configFilePath;
+        $this->config = json_decode($this->generateInitialConfig(), true, 512, JSON_THROW_ON_ERROR);
+        return "Default Configuration";
     }
 
     /**
@@ -46,7 +42,7 @@ class EzRider
     public function generateOverrideFiles()  : void
     {
         collect($this->getMappings())->each(
-            fn(array $inputOutputMapping) => $this->dockerComposeOverrideGenerator->generateOverrideFile($inputOutputMapping, $this->getPlugins())
+            fn(array $inputOutputMapping) => $this->dockerComposeOverrideGenerator->generateOverrideFile($inputOutputMapping)
         );
     }
 
@@ -55,11 +51,9 @@ class EzRider
      *
      * @throws \JsonException
      */
-    protected function generateInitialConfig() : void
+    protected function generateInitialConfig() : string
     {
         $defaults = [
-            'plugin_paths' => [],
-            'plugins' => ['VaultRetriever', 'RandomGenerator'],
             'map' => [
                 [
                     "input" => './docker-compose.yml',
@@ -68,10 +62,7 @@ class EzRider
             ]
         ];
 
-        File::put(
-            $this->defaultConfigFilePath(),
-            json_encode($defaults, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
-        );
+        return json_encode($defaults, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
     }
 
     /**
@@ -82,16 +73,6 @@ class EzRider
     protected function getMappings() : ?array
     {
         return $this->config['map'];
-    }
-
-    /**
-     * Fetch plugin options from config
-     *
-     * @return array|null
-     */
-    protected function getPlugins() : ?array
-    {
-        return $this->config['plugins'];
     }
 
     /**
