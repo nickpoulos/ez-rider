@@ -47,7 +47,7 @@ services:
       RANDOM_STRING_OF_LENGTH: random:string(64)
       RSA_KEY_PAIR_PUBLIC: rsa:public(4096, passport)   # takes key length and "key-pair name" as arguments
       RSA_KEY_PAUR_PRIVATE: rsa:private(4096, passport) # takes key length and "key-pair name" as arguments      
-      VAULT_SECRET: vault:secret/data/path/to/vault#value # these poths are identical to K8s/Nomad keys
+      VAULT_SECRET: vault:secret/data/path/to/vault#value # these paths are identical to K8s/Nomad keys
 ```
 
 3. In your project's root folder (or wherever docker-compose.yml is located), run: 
