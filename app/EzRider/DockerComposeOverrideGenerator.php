@@ -3,15 +3,24 @@
 namespace App\EzRider;
 
 use App\EzRider\Plugins\Plugin;
-use App\EzRider\Plugins\PluginLoader;
 use Wilderborn\Partyline\Facade as Partyline;
+use App\EzRider\Plugins\RSA\RSAKeyGenerator;
+use App\EzRider\Plugins\Vault\VaultRetriever;
+use App\EzRider\Plugins\Default\RandomGenerator;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use App\EzRider\Plugins\Laravel\LaravelApplicationKeyGenerator;
 
 class DockerComposeOverrideGenerator
 {
+    public const PLUGINS = [
+        RandomGenerator::class,
+        VaultRetriever::class,
+        RSAKeyGenerator::class,
+        LaravelApplicationKeyGenerator::class,
+    ];
+
     public function __construct(
         protected DockerComposeParser $dockerComposeParser,
-        protected PluginLoader $pluginLoader,
     ) {}
 
     /**
@@ -20,7 +29,7 @@ class DockerComposeOverrideGenerator
      * @param array $inputOutputMap
      * @return int|bool
      */
-    public function generateOverrideFile(array $inputOutputMap, array $plugins) : int|bool
+    public function generateOverrideFile(array $inputOutputMap) : int|bool
     {
         ["input" => $inputFilePath, "output" => $outputFilepath] = $inputOutputMap;
 
@@ -42,9 +51,9 @@ class DockerComposeOverrideGenerator
 
         $environmentVariablesByService = $servicesWithEnvironmentVariables->map(\Closure::fromCallable([$this->dockerComposeParser, 'mapEnvironmentVariablesFromServiceData']));
 
-        $mappedEnvironmentVariablesByServicePerPlugin = collect($plugins)->map(function(string $pluginClass) use ($environmentVariablesByService) {
+        $mappedEnvironmentVariablesByServicePerPlugin = collect(self::PLUGINS)->map(function(string $pluginClass) use ($environmentVariablesByService) {
             /** @var Plugin $plugin */
-            $plugin = app()->make($this->pluginLoader->load($pluginClass));
+            $plugin = app()->make($pluginClass);
             return $plugin->mapServicesEnvironmentVariables($environmentVariablesByService);
         })->toArray();
 
