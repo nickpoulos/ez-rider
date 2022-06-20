@@ -1,0 +1,38 @@
+version: '3.3'
+
+services:
+  test-mysql-service:
+    image: mysql:8.0
+    container_name: test-mysql-service
+    restart: always
+    tty: true
+    ports:
+      - "4308:3308"
+    environment:
+      MYSQL_DATABASE: test_database
+      MYSQL_USER: test_database_admin
+      MYSQL_PASSWORD: test_database_password
+      MYSQL_ROOT_PASSWORD: root
+  test-service:
+    image: "test-service"
+    build:
+      context: .
+    container_name: test-service
+    command: sh -c "/wait && /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf"
+    ports:
+      - "9801:80"
+    environment:
+      TEST_DB_CONNECTION: mysql-testing
+      TEST_DB_DATABASE: triplelift_test
+      TEST_DB_HOST: creative-service-triplelift-shared-mysql
+      TEST_DB_USERNAME: root
+      TEST_DB_PASSWORD: root
+      TEST_DB_PORT: 3308
+      TEST_DB_CREATIVE_SERVICE_CONNECTION: creative-service-mysql-testing
+      TEST_DB_CREATIVE_SERVICE_DATABASE: creative_service_test
+      TEST_DB_CREATIVE_SERVICE_HOST: creative-service-mysql
+      TEST_DB_CREATIVE_SERVICE_USERNAME: root
+      TEST_DB_CREATIVE_SERVICE_PASSWORD: root
+      TEST_DB_CREATIVE_SERVICE_PORT: 3308
+    volumes:
+      - ./src:/var/www
