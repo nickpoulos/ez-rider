@@ -10,7 +10,7 @@ use Wilderborn\Partyline\Facade as Partyline;
 class VaultService
 {
     protected const VAULT_TOKEN_ENV_VAR = 'VAULT_TOKEN';
-    protected const VAULT_URL_ENV_VAR = 'VAULT_URL';
+    protected const VAULT_URL_ENV_VAR = 'VAULT_ADDR';
 
     protected ?string $vaultUrl;
     protected ?string $vaultToken;
