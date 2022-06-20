@@ -19,8 +19,17 @@ Many times your application may require secrets or other sensitive information, 
 ### Development
 
 - Built using [Laravel Zero](https://laravel-zero.com) - a great little distro of Laravel for building and packaging PHP-CLI applications using our favorite PHP framework
-- Includes Plugins for Vault, and some random data generators
-- Plugins are easily created, please submit a PR!
+- Includes plugins for HashiCorp Vault, Laravel Application Keys, RSA Key-Pairs, and some random data generators.
+- Easily create new plugins, please submit a PR!
+
+------
+
+## Requirements
+
+1. PHP 8.0+ installed on your system: [Install Instructions](https://stitcher.io/blog/php-81-upgrade-mac)
+2. Make sure YAML PECL Extension is also installed: `brew install libyaml && pecl install yaml`
+3. Install Composer globally: `brew install composer`
+4. Ensure Composer's bin folder is in your $PATH: `export PATH=$PATH:$HOME/.composer/vendor/bin`
 
 ------
 
@@ -53,10 +62,10 @@ services:
 3. In your project's root folder (or wherever docker-compose.yml is located), run: 
 
 ```bash
-./ez-rider
+ez-rider optional_config_file.json
 ```
 
-This command will also take an optional config file argument. This is useful when multiple mappings or customized docker-compose.yml filenames are required.
+This command accepts an optional config file argument. This is useful when multiple mappings or customized docker-compose.yml filenames are required.
 
 The default config below will be used when no config file argument is given. 
 
@@ -88,7 +97,7 @@ If you have either of the following environment vars set, the prompt is skipped 
 For example: 
 
 ```bash
-export VAULT_URL=http://our-vault-server.vault.com
+export VAULT_ADDR=http://our-vault-server.vault.com
 export VAULT_TOKEN=abc1234
 ```
 
