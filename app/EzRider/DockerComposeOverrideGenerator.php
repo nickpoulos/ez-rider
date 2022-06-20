@@ -12,6 +12,8 @@ use App\EzRider\Plugins\Laravel\LaravelApplicationKeyGenerator;
 
 class DockerComposeOverrideGenerator
 {
+    public const DOCKER_COMPOSE_SYNTAX_VERSION = '3.3';
+
     public const PLUGINS = [
         RandomGenerator::class,
         VaultRetriever::class,
@@ -27,9 +29,9 @@ class DockerComposeOverrideGenerator
      * Generate an override file for a given mapping
      *
      * @param array $inputOutputMap
-     * @return int|bool
+     * @return bool
      */
-    public function generateOverrideFile(array $inputOutputMap) : int|bool
+    public function generateOverrideFile(array $inputOutputMap) : bool
     {
         ["input" => $inputFilePath, "output" => $outputFilepath] = $inputOutputMap;
 
@@ -55,27 +57,15 @@ class DockerComposeOverrideGenerator
             /** @var Plugin $plugin */
             $plugin = app()->make($pluginClass);
             return $plugin->mapServicesEnvironmentVariables($environmentVariablesByService);
-        })->toArray();
+        });
 
-        $dockerComposeOverrideConfig = [
-            'services' => array_merge_recursive(...$mappedEnvironmentVariablesByServicePerPlugin)
-        ];
+        $mappedEnvironmentVariablesByService = collect(array_merge_recursive(...$mappedEnvironmentVariablesByServicePerPlugin));
 
-        $baseYaml = yaml_emit($dockerComposeOverrideConfig);
-        $metaData = $this->generateMetaData();
+        $dockerComposeOverrideConfig = $mappedEnvironmentVariablesByService->reduce(function(array $dockerComposeOverrideConfig, array $mappedEnvironmentVariables, string $serviceName) use ($environmentVariablesByService) {
+            $dockerComposeOverrideConfig['services'][$serviceName]['environment'] = $mappedEnvironmentVariables;
+            return $dockerComposeOverrideConfig;
+        }, ['version' => self::DOCKER_COMPOSE_SYNTAX_VERSION,]);
 
-        return file_put_contents($outputFilepath, $metaData . $baseYaml);
-    }
-
-    /**
-     * Generate some meta-data about the override operation
-     *
-     * @return string
-     */
-    protected function generateMetaData() : string
-    {
-        return '---' . PHP_EOL .
-            'generator: ' . config('app.name') . ' (' . app('git.version') . ')' . PHP_EOL .
-            'created_at: ' . date('Y-m-d H:i:s') . PHP_EOL;
+        return yaml_emit_file($outputFilepath, $dockerComposeOverrideConfig);
     }
 }
