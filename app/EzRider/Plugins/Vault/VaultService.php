@@ -37,7 +37,7 @@ class VaultService
         });
     }
 
-    protected function fetchVaultUrl() : string
+    protected function fetchVaultUrl() : ?string
     {
         $cache = Cache::get(self::VAULT_URL_ENV_VAR);
 
@@ -54,7 +54,7 @@ class VaultService
        return $this->promptUrl();
     }
 
-    protected function fetchVaultToken() : string
+    protected function fetchVaultToken() : ?string
     {
         $cache = Cache::get(self::VAULT_TOKEN_ENV_VAR);
 
@@ -71,14 +71,14 @@ class VaultService
        return $this->promptToken();
     }
 
-    protected function promptUrl() : string
+    protected function promptUrl() : ?string
     {
         $url = Partyline::ask('Enter Vault URL');
         Cache::put(self::VAULT_URL_ENV_VAR, $url);
         return $url;
     }
 
-    protected function promptToken() : string
+    protected function promptToken() : ?string
     {
         $token = Partyline::secret('Enter Vault API Token');
         Cache::put(self::VAULT_TOKEN_ENV_VAR, $token);
