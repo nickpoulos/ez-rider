@@ -37,13 +37,16 @@ class VaultRetriever extends Plugin
 
     protected function getSecretFromVault(array $secretPathAndKey) : string
     {
-        $vaultData = $this->vaultService->fetchSecret('/' . $secretPathAndKey[0]);
+        $vaultResponseData = $this->vaultService->fetchSecret('/' . $secretPathAndKey[0]);
 
-        if (array_key_exists('errors', $vaultData)) {
-            Partyline::error('Vault ' . Str::plural('Error', count($vaultData['errors'])) . ': ' . implode(PHP_EOL, $vaultData['errors']));
+        if (array_key_exists('errors', $vaultResponseData)) {
+            if (count($vaultResponseData['errors']) === 0) {
+                $vaultResponseData['errors'][] = 'Unable to locate secret: "' . $secretPathAndKey[0] . '#' . $secretPathAndKey[1] . '"';
+            }
+            Partyline::error('Vault ' . Str::plural('Error', count($vaultResponseData['errors'])) . ': ' . implode(PHP_EOL, $vaultResponseData['errors']));
             exit(1);
         }
 
-        return $vaultData['data']['data'][$secretPathAndKey[1]];
+        return $vaultResponseData['data']['data'][$secretPathAndKey[1]];
     }
 }
